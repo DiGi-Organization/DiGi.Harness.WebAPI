@@ -2,11 +2,11 @@
 
 The ASP.NET layer of [DiGi.Harness](https://github.com/DiGi-Organization/DiGi.Harness): a chat endpoint any DiGi web host can add.
 
-- **`HarnessChatController`** (`harness/harnesschat`): the configuration, chat sessions, and a `text/event-stream` endpoint that streams one turn of the agent loop.
+- **`HarnessChatController`** (`harness/harnesschat`): the configuration, chat sessions, a `text/event-stream` endpoint that streams one turn of the agent loop, and `sessions/{id}/export?mode=Messages|Full`, which downloads the chat as a JSON `ConversationExport` (Full adds the complete thinking, tool calls and tool results, for handing to a model).
 - **Thinking visibility** is filtered on the server: `Full`, `Summary` or `None`.
 - **`IHarnessHost`** is what each host implements: who the user is, which tools that user gets, and the system prompt. Nothing project-specific lives here.
 - **`ChatSessionStore`** keeps sessions in memory, owned by a user and expiring after an idle time.
-- **`wwwroot/js/harness-chat-core.js`** is a framework-free chat widget: live status, elapsed time, the tool-call history, a thinking-visibility selector and a Stop button. Hosts copy it in with a build target.
+- **`wwwroot/js/harness-chat-core.js`** is a framework-free chat widget: live status, elapsed time, the tool-call history, a thinking-visibility selector, a Stop button, and an Export button (right of New chat) that asks *Messages only* (default) or *Full*. Hosts copy it in with a build target.
 
 ## 💻 Coding Guidelines for Developers & AI Agents
 

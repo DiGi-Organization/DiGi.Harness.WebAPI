@@ -8,7 +8,10 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Reflection;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
@@ -206,6 +209,72 @@ namespace DiGi.Harness.WebAPI.Classes
             }
 
             return chatSessionStore.Remove(id, harnessUser.Id) ? NoContent() : NotFound();
+        }
+
+        /// <summary>
+        /// Exports a session as a JSON file download: a <see cref="ConversationExport"/> built by <see cref="Harness.Create.ConversationExport(Conversation?, ExportMode, DateTimeOffset, string?)"/>.
+        /// <para><c>Messages</c> (the default) keeps the user and assistant text only; <c>Full</c> also keeps the complete thinking text whatever the client's thinking visibility, the tool calls and the tool results, so the file can be handed to a model for bug fixing. Signatures and redacted thinking data never leave the server. The response carries <c>Content-Disposition: attachment; filename="chat-&lt;yyyyMMdd-HHmmss&gt;-&lt;messages|full&gt;.json"</c> (UTC).</para>
+        /// </summary>
+        /// <param name="id">The session id.</param>
+        /// <param name="mode">The export mode by name: <c>Messages</c> (default when omitted) or <c>Full</c>, case-insensitive.</param>
+        /// <param name="cancellationToken">The token that cancels the request.</param>
+        /// <returns>200 with the export; 400 for an unknown mode; 401; 404 for an unknown, foreign or expired session; 409 while a turn of the session is running; 503 when the harness is disabled.</returns>
+        [HttpGet("sessions/{id}/export", Name = $"{nameof(HarnessChatController)}_{nameof(ExportAsync)}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+        public async Task<IActionResult> ExportAsync([FromRoute] string? id, [FromQuery(Name = "mode")] string? mode = null, CancellationToken cancellationToken = default)
+        {
+            if (!harnessConfiguration.Enabled)
+            {
+                return StatusCode(StatusCodes.Status503ServiceUnavailable);
+            }
+
+            HarnessUser? harnessUser = await harnessHost.UserAsync(HttpContext, cancellationToken);
+            if (harnessUser is null || !harnessConfiguration.IsAllowed(harnessUser.Id))
+            {
+                return Unauthorized();
+            }
+
+            ExportMode exportMode;
+            if (string.IsNullOrWhiteSpace(mode) || string.Equals(mode, nameof(ExportMode.Messages), StringComparison.OrdinalIgnoreCase))
+            {
+                exportMode = ExportMode.Messages;
+            }
+            else if (string.Equals(mode, nameof(ExportMode.Full), StringComparison.OrdinalIgnoreCase))
+            {
+                exportMode = ExportMode.Full;
+            }
+            else
+            {
+                return BadRequest($"Unknown export mode '{mode}'; use Messages or Full.");
+            }
+
+            DateTimeOffset now = timeProvider.GetUtcNow();
+
+            ChatSession? chatSession = chatSessionStore.ChatSession(id, harnessUser.Id, now);
+            if (chatSession is null)
+            {
+                return NotFound();
+            }
+
+            // The history is appended while a turn runs; export only a settled conversation.
+            if (chatSession.SemaphoreSlim.CurrentCount == 0)
+            {
+                return Conflict("A reply is still running; export once it has finished.");
+            }
+
+            string? version = typeof(Conversation).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+
+            ConversationExport? conversationExport = Harness.Create.ConversationExport(chatSession.Conversation, exportMode, now, version);
+
+            string fileName = string.Format(CultureInfo.InvariantCulture, "chat-{0:yyyyMMdd-HHmmss}-{1}.json", now.UtcDateTime, exportMode == ExportMode.Full ? "full" : "messages");
+            Response.Headers.ContentDisposition = new ContentDispositionHeaderValue("attachment") { FileName = fileName }.ToString();
+
+            return Content(Core.Convert.ToSystem_String(conversationExport) ?? "null", "application/json");
         }
 
         /// <summary>

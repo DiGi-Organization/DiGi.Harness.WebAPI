@@ -344,6 +344,41 @@ The token that cancels the request\.
 [System\.Threading\.Tasks\.Task&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')[Microsoft\.AspNetCore\.Mvc\.IActionResult](https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.mvc.iactionresult 'Microsoft\.AspNetCore\.Mvc\.IActionResult')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')  
 204 when removed; 401; 404 for an unknown, foreign or expired session; 503 when the harness is disabled\.
 
+<a name='DiGi.Harness.WebAPI.Classes.HarnessChatController.ExportAsync(string,string,System.Threading.CancellationToken)'></a>
+
+## HarnessChatController\.ExportAsync\(string, string, CancellationToken\) Method
+
+Exports a session as a JSON file download: a [DiGi\.Harness\.Classes\.ConversationExport](https://learn.microsoft.com/en-us/dotnet/api/digi.harness.classes.conversationexport 'DiGi\.Harness\.Classes\.ConversationExport') built by [DiGi\.Harness\.Create\.ConversationExport\(DiGi\.Harness\.Classes\.Conversation,DiGi\.Harness\.Enums\.ExportMode,System\.DateTimeOffset,System\.String\)](https://learn.microsoft.com/en-us/dotnet/api/digi.harness.create.conversationexport#digi-harness-create-conversationexport(digi-harness-classes-conversation-digi-harness-enums-exportmode-system-datetimeoffset-system-string) 'DiGi\.Harness\.Create\.ConversationExport\(DiGi\.Harness\.Classes\.Conversation,DiGi\.Harness\.Enums\.ExportMode,System\.DateTimeOffset,System\.String\)')\.
+
+`Messages` (the default) keeps the user and assistant text only; `Full` also keeps the complete thinking text whatever the client's thinking visibility, the tool calls and the tool results, so the file can be handed to a model for bug fixing. Signatures and redacted thinking data never leave the server. The response carries `Content-Disposition: attachment; filename="chat-<yyyyMMdd-HHmmss>-<messages|full>.json"` (UTC).
+
+```csharp
+public System.Threading.Tasks.Task<Microsoft.AspNetCore.Mvc.IActionResult> ExportAsync(string? id, string? mode=null, System.Threading.CancellationToken cancellationToken=default(System.Threading.CancellationToken));
+```
+#### Parameters
+
+<a name='DiGi.Harness.WebAPI.Classes.HarnessChatController.ExportAsync(string,string,System.Threading.CancellationToken).id'></a>
+
+`id` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+The session id\.
+
+<a name='DiGi.Harness.WebAPI.Classes.HarnessChatController.ExportAsync(string,string,System.Threading.CancellationToken).mode'></a>
+
+`mode` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+The export mode by name: `Messages` \(default when omitted\) or `Full`, case\-insensitive\.
+
+<a name='DiGi.Harness.WebAPI.Classes.HarnessChatController.ExportAsync(string,string,System.Threading.CancellationToken).cancellationToken'></a>
+
+`cancellationToken` [System\.Threading\.CancellationToken](https://learn.microsoft.com/en-us/dotnet/api/system.threading.cancellationtoken 'System\.Threading\.CancellationToken')
+
+The token that cancels the request\.
+
+#### Returns
+[System\.Threading\.Tasks\.Task&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')[Microsoft\.AspNetCore\.Mvc\.IActionResult](https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.mvc.iactionresult 'Microsoft\.AspNetCore\.Mvc\.IActionResult')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')  
+200 with the export; 400 for an unknown mode; 401; 404 for an unknown, foreign or expired session; 409 while a turn of the session is running; 503 when the harness is disabled\.
+
 <a name='DiGi.Harness.WebAPI.Classes.HarnessChatController.MessageAsync(string,System.Text.Json.Nodes.JsonObject,System.Threading.CancellationToken)'></a>
 
 ## HarnessChatController\.MessageAsync\(string, JsonObject, CancellationToken\) Method
