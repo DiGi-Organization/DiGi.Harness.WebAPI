@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<OutputPath>..\bin\</OutputPath>
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+		<!-- Serilog.Sinks.File is a NuGet dependency of DiGi.Serilog (referenced via HintPath), so it must be re-added here to reach the extension output. -->
+		<PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Reference Include="DiGi.Core">
+			<HintPath>..\..\DiGi.Core\bin\DiGi.Core.dll</HintPath>
+		</Reference>
+		<Reference Include="DiGi.Harness">
+			<HintPath>..\..\DiGi.Harness\bin\DiGi.Harness.dll</HintPath>
+		</Reference>
+		<Reference Include="DiGi.Serilog">
+			<HintPath>..\..\DiGi.Serilog\bin\DiGi.Serilog.dll</HintPath>
+		</Reference>
+		<Reference Include="DiGi.WebAPI">
+			<HintPath>..\..\DiGi.WebAPI\bin\DiGi.WebAPI.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+
+</Project>
